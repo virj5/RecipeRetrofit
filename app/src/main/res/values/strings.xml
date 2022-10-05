@@ -1,0 +1,5 @@
+<resources>
+    <string name="app_name">RecipeRetrofit</string>
+    <string name="get_recipe">Get Recipe</string>
+    <string name="enter_ingredients">Enter Ingredients</string>
+</resources>
