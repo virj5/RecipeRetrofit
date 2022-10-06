@@ -9,6 +9,8 @@ import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import retrofit2.Call;
@@ -32,7 +34,7 @@ public class MainActivity extends AppCompatActivity {
         searchBar = findViewById(R.id.searchIngredient);
         getRecipe = findViewById(R.id.buttonSearch);
 
-        searchedIngredient = searchBar.getText().toString();
+        //searchedIngredient = searchBar.getText().toString();
 
 
         // This creates an instance of the retrofit client
@@ -41,9 +43,10 @@ public class MainActivity extends AppCompatActivity {
         getRecipe.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
+                searchedIngredient = searchBar.getText().toString();
                 // Grab the list of recipes from the JSON that was fetched using the GET parameters defined in the GetDataService interface
                 //create the URL for getting ingredients
-                Call<List<Recipes>> recipesList = service.getAllRecipes("ffec6a5d973042fdb526406895cf0c77","tomato, lettuce", 2);
+                Call<List<Recipes>> recipesList = service.getAllRecipes("ffec6a5d973042fdb526406895cf0c77",searchedIngredient, 3);
 
 
                 // Asynchronously send the request and notify callback of its response or if an error occurred talking to the server,
@@ -66,32 +69,44 @@ public class MainActivity extends AppCompatActivity {
 
 
     private void generateDataList(Response<List<Recipes>> recipesList) {
-        //Toast.makeText(this, recipesList.body().get(0).getId().toString(), Toast.LENGTH_SHORT).show();
-        //Toast.makeText(this, recipesList.body().get(0).getTitle(), Toast.LENGTH_SHORT).show();
         String ingredientList = "Here is the full ingredient list:\n";
+
         String recipeList = "Recipes you can make: \n" + "\n";
 
 
-        //printing out ingredient list for the first recipe right now
+        //adding ingredient list for recipes into a string; we have all ingredients here and are separating
+        //them by hyphens
+        for(int k = 0; k < recipesList.body().size(); ++k){
 
-        for(int i = 0; i < recipesList.body().get(0).getUsedIngredients().size(); ++i) {
-            ingredientList += recipesList.body().get(0).getUsedIngredients().get(i).get("originalName") + ": " + recipesList.body().get(0).getUsedIngredients().get(i).get("amount") + "\n";
+            for(int i = 0; i < recipesList.body().get(k).getUsedIngredients().size(); ++i) {
+                ingredientList += recipesList.body().get(k).getUsedIngredients().get(i).get("originalName") + ": " + recipesList.body().get(k).getUsedIngredients().get(i).get("amount");
+                //adding units
+                ingredientList += " " + recipesList.body().get(k).getUsedIngredients().get(i).get("unit") + "\n";
+            }
+
+            for(int j = 0; j < recipesList.body().get(k).getMissedIngredients().size(); ++j) {
+                ingredientList += recipesList.body().get(k).getMissedIngredients().get(j).get("originalName") + ": " + recipesList.body().get(k).getMissedIngredients().get(j).get("amount");
+                //adding units
+                ingredientList += " " + recipesList.body().get(k).getMissedIngredients().get(j).get("unit") + "\n";
+            }
+            //we want to use this hyphen in order to separate each ingredient
+            ingredientList += "--";
         }
 
-        for(int j = 0; j < recipesList.body().get(0).getMissedIngredients().size(); ++j) {
-            ingredientList += recipesList.body().get(0).getMissedIngredients().get(j).get("originalName") + ": " + recipesList.body().get(0).getMissedIngredients().get(j).get("amount") + "\n";
-        }
+        ingredientList = ingredientList.replaceAll("\"","");
 
+        //create list to take ingredientList and split by hyphen to separate the different ingredients by recipe index
+        //holds the ingredients as well
+        List<String> holder = Arrays.asList(ingredientList.split("--"));
 
-
-        //print out 2 recipes for given items
+        //print out recipes with ingredient list below each recipe
         for(int i = 0; i < recipesList.body().size(); ++i){
             recipeList += recipesList.body().get(i).getTitle() + "\n";
+            recipeList += holder.get(i) + "\n";
         }
 
-        //tvitemID.setText(recipesList.body().get(0).getTitle());
         tvitemID.setText(recipeList);
-        tvIngredient.setText(ingredientList);
+        //tvIngredient.setText(ingredientList);
     }
 
 }
